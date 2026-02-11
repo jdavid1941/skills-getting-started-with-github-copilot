@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      // Reset activity select (keep the placeholder)
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -20,12 +22,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-        `;
+        // Title and basic info
+        const titleEl = document.createElement("h4");
+        titleEl.textContent = name;
+
+        const descEl = document.createElement("p");
+        descEl.textContent = details.description;
+
+        const scheduleEl = document.createElement("p");
+        scheduleEl.innerHTML = `<strong>Schedule:</strong> ${details.schedule}`;
+
+        const availabilityEl = document.createElement("p");
+        availabilityEl.innerHTML = `<strong>Availability:</strong> ${spotsLeft} spots left`;
+
+        activityCard.appendChild(titleEl);
+        activityCard.appendChild(descEl);
+        activityCard.appendChild(scheduleEl);
+        activityCard.appendChild(availabilityEl);
+
+        // Participants section
+        const participantsHeader = document.createElement("p");
+        participantsHeader.innerHTML = "<strong>Participants:</strong>";
+
+        const participantsList = document.createElement("ul");
+        participantsList.className = "participants-list";
+
+        if (Array.isArray(details.participants) && details.participants.length > 0) {
+          details.participants.forEach((email) => {
+            const li = document.createElement("li");
+            li.className = "participant-item";
+
+            const span = document.createElement("span");
+            span.className = "participant-email";
+            span.textContent = email;
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "participant-delete";
+            delBtn.setAttribute("aria-label", `Remove ${email}`);
+            delBtn.title = "Remove participant";
+            delBtn.textContent = "✖";
+
+            // Attach delete handler
+            delBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              try {
+                const resp = await fetch(
+                  `/activities/${encodeURIComponent(name)}/participants?email=${encodeURIComponent(email)}`,
+                  { method: "DELETE" }
+                );
+
+                const resJson = await resp.json();
+                if (resp.ok) {
+                  messageDiv.textContent = resJson.message;
+                  messageDiv.className = "success";
+                  messageDiv.classList.remove("hidden");
+                  // refresh activities
+                  fetchActivities();
+                } else {
+                  messageDiv.textContent = resJson.detail || "Failed to remove participant";
+                  messageDiv.className = "error";
+                  messageDiv.classList.remove("hidden");
+                }
+                setTimeout(() => messageDiv.classList.add("hidden"), 4000);
+              } catch (err) {
+                console.error("Error removing participant:", err);
+                messageDiv.textContent = "Failed to remove participant";
+                messageDiv.className = "error";
+                messageDiv.classList.remove("hidden");
+                setTimeout(() => messageDiv.classList.add("hidden"), 4000);
+              }
+            });
+
+            li.appendChild(span);
+            li.appendChild(delBtn);
+            participantsList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.className = "participants-empty";
+          li.textContent = "No participants yet";
+          participantsList.appendChild(li);
+        }
+
+        activityCard.appendChild(participantsHeader);
+        activityCard.appendChild(participantsList);
 
         activitiesList.appendChild(activityCard);
 
