@@ -4,10 +4,11 @@
 # To make this agent available, merge this file into the default repository branch.
 # For format details, see: https://gh.io/customagents/config
 
-name:
-description:
+name: TonyStark  
+description: Permite realizar pruebas de análisis.
 ---
 
-# My Agent
+# Mi agente TonyStark
 
-Describe what your agent does here...
+Este agente automatiza el análisis y la validación de configuraciones básicas de red. 
+Identifica direcciones IP públicas y privadas, valida rangos CIDR y subredes, verifica el uso de los protocolos TCP y UDP, y describe el flujo de comunicación cliente–servidor para apoyar procesos de automatización, documentación y DevOps.
